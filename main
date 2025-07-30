@@ -1,0 +1,46 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local originalPosition = Vector3.new(85.87109375, 140.24578857421875, 60.69239807128906)
+
+local function getNearestCoin()
+	local nearest, minDist = nil, math.huge
+	for _, obj in pairs(workspace:GetDescendants()) do
+		if obj:IsA("BasePart") and obj.Name == "Coin_Server" then
+			local dist = (obj.Position - originalPosition).Magnitude
+			if dist < minDist then
+				minDist = dist
+				nearest = obj
+			end
+		end
+	end
+	return nearest
+end
+
+local function startTeleportLoop()
+	task.spawn(function()
+		while true do
+			local character = player.Character or player.CharacterAdded:Wait()
+			local root = character:FindFirstChild("HumanoidRootPart")
+
+			if root then
+				local coin = getNearestCoin()
+				if coin then
+					root.CFrame = CFrame.new(coin.Position + Vector3.new(0, 3, 0))
+					task.wait(0.5)
+
+					root.CFrame = CFrame.new(originalPosition)
+				end
+			end
+
+			task.wait(2)
+		end
+	end)
+end
+
+startTeleportLoop()
+
+player.CharacterAdded:Connect(function()
+	task.wait(1)
+	startTeleportLoop()
+end)
